@@ -21,6 +21,8 @@ VELOCITY_WINDOW = 10
 VELOCITY_LIMIT = 3
 
 velocity_cache: Dict[str, List[float]] = {}
+session_timestamps: Dict[str, List[float]] = {}
+TRAINING_METRICS: Dict = {}
 start_time = time.time()
 total_requests = 0
 
@@ -85,6 +87,7 @@ async def lifespan(app: FastAPI):
     SCALER_STATS = artifact["scaler_stats"]
     FEATURE_ORDER = artifact["feature_order"]
     CONTINUOUS_FEATURE_ORDER = artifact["continuous_feature_order"]
+    TRAINING_METRICS.update(artifact.get("training_metrics", {}))
     print(f"Loaded ensemble: RF + XGB + LGBM")
     yield
 
@@ -116,6 +119,16 @@ def check_velocity(session_id: str) -> bool:
         return True
     velocity_cache[session_id].append(now)
     return False
+
+
+def record_session_ts(session_id: str):
+    now = time.time()
+    if session_id not in session_timestamps:
+        session_timestamps[session_id] = []
+    session_timestamps[session_id].append(now)
+    session_timestamps[session_id] = [
+        t for t in session_timestamps[session_id] if now - t < 60
+    ]
 
 
 # ----------------------------------------------------------------
@@ -223,7 +236,8 @@ def run_predict(req: TransactionRequest) -> dict:
         )
     contributions.sort(key=lambda x: x["suspicion_score"], reverse=True)
 
-    # --- 7. Persist ---
+    # --- 7. Session tracking + Persist ---
+    record_session_ts(req.session_id)
     entry = TransactionLedger(
         txn_uuid=txn_uuid,
         session_id=req.session_id,
@@ -522,6 +536,19 @@ async def export_report(txn_uuid: str, db: Session = Depends(get_db)):
             "block_threshold": BLOCK_THRESHOLD,
         },
     }
+
+
+@app.get("/api/v1/metrics")
+async def get_metrics():
+    return {"training_metrics": TRAINING_METRICS}
+
+
+@app.get("/api/v1/session/{session_id}/timeline")
+async def get_session_timeline(session_id: str):
+    now = time.time()
+    pts = session_timestamps.get(session_id, [])
+    points = [{"offset": round(now - ts, 2), "ts": ts} for ts in pts]
+    return {"session_id": session_id, "points": points}
 
 
 @app.get("/api/v1/model-agreement")

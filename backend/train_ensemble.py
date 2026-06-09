@@ -6,6 +6,12 @@ import numpy as np
 import pandas as pd
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    confusion_matrix,
+    precision_recall_fscore_support,
+    roc_auc_score,
+    roc_curve,
+)
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 
@@ -163,6 +169,67 @@ def main():
     )
     lgbm.fit(X_train, y_train)
 
+    # --- Evaluation metrics ---
+    rf_probs = rf.predict_proba(X_test)[:, 1]
+    xgb_probs = xgb.predict_proba(X_test)[:, 1]
+    lgbm_probs = lgbm.predict_proba(X_test)[:, 1]
+    max_vote_probs = np.maximum(np.maximum(rf_probs, xgb_probs), lgbm_probs)
+    ensemble_preds = (max_vote_probs >= 0.5).astype(int)
+    cm = confusion_matrix(y_test, ensemble_preds).tolist()
+
+    def _model_metrics(name, probs):
+        fpr, tpr, _ = roc_curve(y_test, probs)
+        auc = round(float(roc_auc_score(y_test, probs)), 4)
+        preds = (probs >= 0.5).astype(int)
+        p, r, f, _ = precision_recall_fscore_support(y_test, preds)
+        step = max(1, len(fpr) // 200)
+        return {
+            "name": name,
+            "roc_auc": auc,
+            "roc_curve": {
+                "fpr": [round(float(x), 6) for x in fpr[::step]],
+                "tpr": [round(float(x), 6) for x in tpr[::step]],
+            },
+            "metrics": {
+                "fraud": {
+                    "precision": round(float(p[1]), 4),
+                    "recall": round(float(r[1]), 4),
+                    "f1": round(float(f[1]), 4),
+                }
+            },
+        }
+
+    models_metrics = {
+        "rf": _model_metrics("RandomForest", rf_probs),
+        "xgb": _model_metrics("XGBoost", xgb_probs),
+        "lgbm": _model_metrics("LightGBM", lgbm_probs),
+    }
+
+    ens_fpr, ens_tpr, _ = roc_curve(y_test, max_vote_probs)
+    ens_auc = round(float(roc_auc_score(y_test, max_vote_probs)), 4)
+    ens_p, ens_r, ens_f, _ = precision_recall_fscore_support(y_test, ensemble_preds)
+    ens_step = max(1, len(ens_fpr) // 200)
+    training_metrics = {
+        "test_size": len(y_test),
+        "ensemble": {
+            "confusion_matrix": cm,
+            "roc_auc": ens_auc,
+            "roc_curve": {
+                "fpr": [round(float(x), 6) for x in ens_fpr[::ens_step]],
+                "tpr": [round(float(x), 6) for x in ens_tpr[::ens_step]],
+            },
+            "metrics": {
+                "fraud": {
+                    "precision": round(float(ens_p[1]), 4),
+                    "recall": round(float(ens_r[1]), 4),
+                    "f1": round(float(ens_f[1]), 4),
+                }
+            },
+        },
+        "models": models_metrics,
+    }
+    print("Test metrics computed")
+
     fraud_mask = train_scaled[train_scaled[LABEL_COL] == 1]
     fraud_centroid = (
         fraud_mask[CONTINUOUS_FEATURES].mean(axis=0).to_numpy(dtype=np.float64)
@@ -181,6 +248,7 @@ def main():
         "scaler_stats": scaler_stats,
         "category_map": category_map,
         "feature_importance": rf_importance,
+        "training_metrics": training_metrics,
     }
     with open(ENSEMBLE_PATH, "wb") as f:
         joblib.dump(artifact, f)

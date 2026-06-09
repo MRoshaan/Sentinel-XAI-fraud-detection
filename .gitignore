@@ -20,14 +20,32 @@ backend/fraud_ensemble.pkl
 backend/category_map.json
 backend/fraud_centroid.npy
 backend/fraud_engine.pkl
+fraud_model.pkl
+fraud_engine.pkl
+fraud_centroid.npy
+category_map.json
 
 # Database
-fraud_ledger.db
-backend/fraud_ledger.db
+*.db
+*.db-journal
+*.db-wal
 
 # Environment
 .env
 .env.local
+
+# Dataset
+dataset-fraud-detection.csv
+data/
+
+# Ruff cache
+.ruff_cache/
+
+# Junk / test files
+nul
+frontend/nul
+frontend/test-minimal.tsx
+frontend/src/App.tsx.bak
 
 # IDE
 .vscode/
