@@ -1,4 +1,4 @@
-# Sentinel-XAI — Real-Time Credit Card Fraud Detection with Explainable AI
+# Sentinel-XAIReal-Time Credit Card Fraud Detection with Explainable AI
 
 A high-concurrency fraud detection engine using a **Max-Vote Ensemble** of Random Forest, XGBoost, and LightGBM, with real-time explainability (XAI) via Euclidean distance to fraud centroid, velocity-based rate limiting, and SQLite persistence.
 
