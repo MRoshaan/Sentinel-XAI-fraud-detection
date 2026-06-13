@@ -558,6 +558,8 @@ function App() {
   const [result, setResult] = useState<PredictResponse | null>(null);
   const [error, setError] = useState("");
   const [stressSummary, setStressSummary] = useState("");
+  const [liveTime, setLiveTime] = useState(new Date().toLocaleString());
+  const [copiedUuid, setCopiedUuid] = useState("");
 
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [ledgerLoading, setLedgerLoading] = useState(false);
@@ -657,6 +659,12 @@ function App() {
 
   useEffect(() => { fetchConfig(); fetchAll(); }, [fetchConfig, fetchAll]);
 
+  // Live clock tick
+  useEffect(() => { const id = setInterval(() => setLiveTime(new Date().toLocaleString()), 1000); return () => clearInterval(id); }, []);
+
+  // Auto-refresh ledger + alerts every 15 seconds
+  useEffect(() => { const id = setInterval(() => { fetchLedger(); fetchAlerts(); fetchAgreement(); }, 15000); return () => clearInterval(id); }, [fetchLedger, fetchAlerts, fetchAgreement]);
+
   const onExport = useCallback(async (uuid: string) => {
     try {
       const res = await fetch(`${API}/api/v1/export/${uuid}`);
@@ -746,7 +754,7 @@ function App() {
   const radarData = useMemo(() => (result?.feature_contributions ?? []).map((item) => ({ feature: FEATURE_ALIASES[item.feature] || item.feature, suspicion: Number(item.suspicion_score.toFixed(2)) })), [result]);
 
   return (
-    <main className="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(20,184,166,0.12),_transparent_50%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(20,184,166,0.12),_transparent_50%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8 print:hidden">
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -756,6 +764,7 @@ function App() {
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs text-slate-400">{health ? `${health.model_count} Models Loaded` : "Loading..."}</span>
+            <span className="text-[10px] text-slate-600 border-l border-slate-700 pl-3 font-mono">{liveTime}</span>
           </div>
         </div>
 
@@ -833,7 +842,16 @@ function App() {
                     <div className="text-sm text-slate-300">
                       {result.reason === "VELOCITY_EXCEEDED" ? <span className="text-red-400 font-semibold">Rate Limit Exceeded</span> : <>Confidence: <span className="font-semibold text-white">{result.confidence_score.toFixed(2)}%</span></>}
                     </div>
-                    {result.txn_uuid && <span className="text-[10px] text-slate-500 font-mono">UUID: {result.txn_uuid}</span>}
+                    {result.txn_uuid && <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                      UUID: {result.txn_uuid}
+                      <button onClick={() => { navigator.clipboard.writeText(result.txn_uuid!); setCopiedUuid(result.txn_uuid!); setTimeout(() => setCopiedUuid(""), 1500); }} className="text-slate-600 hover:text-cyan-400 transition-colors" title="Copy UUID">
+                        {copiedUuid === result.txn_uuid ? (
+                          <svg className="h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        ) : (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        )}
+                      </button>
+                    </span>}
                   </div>
                   {(() => {
                     const h = result.heuristic_triggered;
@@ -895,6 +913,11 @@ function App() {
                     </>
                   )}
                   <AuditReceipt result={result} form={form} onExport={onExport} />
+                  <div className="mt-4 flex justify-end">
+                    <Button onClick={() => window.print()} variant="outline" size="sm" className="border-slate-600 text-slate-300 bg-slate-950 hover:bg-slate-800 text-xs">
+                      Print Official Receipt
+                    </Button>
+                  </div>
                 </>
               )}
             </Card>
@@ -919,7 +942,7 @@ function App() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h2 className="text-lg font-semibold text-cyan-100">Historical Audit Ledger</h2>
-                <p className="mt-0.5 text-[10px] text-slate-500">SQLite persistent storage &mdash; {ledger.length} records</p>
+                <p className="mt-0.5 text-[10px] text-slate-500">SQLite persistent storage &mdash; {ledger.length} records &middot; auto-refresh every 15s</p>
               </div>
               <Button onClick={fetchAll} variant="outline" size="sm" className="h-6 text-[10px] border-slate-700 text-slate-300 bg-slate-950 hover:bg-slate-800" disabled={ledgerLoading}>
   {ledgerLoading ? (
@@ -960,6 +983,66 @@ function App() {
               </table>
             </div>
           </Card>
+        )}
+      </div>
+
+      {/* Printable Receipt — hidden on screen, full-page on print */}
+      <div className="hidden print:block print:absolute print:inset-0 print:bg-white print:text-black print:p-8 print:w-full print:h-screen print:z-50 print:overflow-auto">
+        {result ? (
+          <div className="max-w-2xl mx-auto">
+            <div className="border-b-2 border-black pb-4 mb-6">
+              <h1 className="text-2xl font-bold tracking-tight">Sentinel-XAI</h1>
+              <p className="text-sm text-gray-600">Official Transaction Audit Record</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm mb-6">
+              <div className="text-gray-500">Print Date/Time</div>
+              <div className="font-semibold">{new Date().toLocaleString()}</div>
+              <div className="text-gray-500">Transaction UUID</div>
+              <div className="font-mono font-semibold">{result.txn_uuid}</div>
+              <div className="text-gray-500">Session ID</div>
+              <div className="font-mono">{result.session_id}</div>
+              <div className="text-gray-500">Transaction Type</div>
+              <div className="font-semibold">{result.type}</div>
+            </div>
+
+            <div className="border-t border-gray-300 pt-4 mb-6">
+              <h2 className="text-lg font-bold mb-2">Financial Details</h2>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                <div className="text-gray-500">Transaction Amount</div>
+                <div className="font-semibold">${(result.amount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                <div className="text-gray-500">Sender Balance (Before)</div>
+                <div className="font-semibold">${(result.oldbalanceOrg ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                <div className="text-gray-500">Sender Balance (After)</div>
+                <div className="font-semibold">${result.newbalanceOrig.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                <div className="text-gray-500">Receiver Balance (After)</div>
+                <div className="font-semibold">${(result.newbalanceDest ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-300 pt-4">
+              <h2 className="text-lg font-bold mb-2">AI Assessment</h2>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                <div className="text-gray-500">Max-Vote Confidence Score</div>
+                <div className="font-semibold">{result.confidence_score.toFixed(2)}%</div>
+                <div className="text-gray-500">Final Routing Decision</div>
+                <div className={`font-bold text-lg ${result.status === "ALLOW" ? "text-green-700" : result.status === "REVIEW" ? "text-yellow-700" : "text-red-700"}`}>{result.status}</div>
+                <div className="text-gray-500">Heuristic Triggered</div>
+                <div className="font-semibold">{result.heuristic_triggered || "None"}</div>
+                <div className="text-gray-500">Fraud Distance</div>
+                <div className="font-mono">{result.euclidean_distance_to_fraud.toFixed(4)}</div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-300 mt-8 pt-4 text-[10px] text-gray-400 text-center">
+              <p>Sentinel-XAI Fraud Detection System — Max-Vote Ensemble (RF + XGBoost + LightGBM)</p>
+              <p className="mt-1">This document is a computer-generated official audit record.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            <p>No transaction data available. Run an analysis first, then print.</p>
+          </div>
         )}
       </div>
     </main>
