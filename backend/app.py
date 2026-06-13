@@ -19,6 +19,7 @@ ALLOW_THRESHOLD = 0.35
 BLOCK_THRESHOLD = 0.70
 VELOCITY_WINDOW = 10
 VELOCITY_LIMIT = 3
+WHITELIST_TYPES = frozenset({"CASH_IN", "PAYMENT", "DEBIT"})
 
 velocity_cache: Dict[str, List[float]] = {}
 session_timestamps: Dict[str, List[float]] = {}
@@ -141,9 +142,9 @@ def run_predict(req: TransactionRequest) -> dict:
     total_requests += 1
     txn_uuid = str(uuid.uuid4())
 
-    heuristic_triggered = None
     newbalance_orig = req.oldbalanceOrg - req.amount
     newbalance_dest = req.oldbalanceDest + req.amount
+    type_upper = req.type.strip().upper()
 
     # --- 1. Velocity check (pre-ML) ---
     if check_velocity(req.session_id):
@@ -159,21 +160,40 @@ def run_predict(req: TransactionRequest) -> dict:
             newbalanceDest=req.oldbalanceDest,
             risk_score=100.0,
             decision="BLOCK",
-            heuristic_triggered=heuristic_triggered,
+            heuristic_triggered=None,
             model_votes=json.dumps({"rf": 100.0, "xgb": 100.0, "lgbm": 100.0}),
         )
         return _build_block_response(txn_uuid, req, "VELOCITY_EXCEEDED", entry)
 
-    # --- 2. Deterministic Heuristic ---
+    # --- 2. Whitelist Heuristic (zero-fraud types, skip ML entirely) ---
+    if type_upper in WHITELIST_TYPES:
+        entry = TransactionLedger(
+            txn_uuid=txn_uuid,
+            session_id=req.session_id,
+            timestamp=datetime.now(timezone.utc),
+            type=req.type,
+            amount=req.amount,
+            oldbalanceOrg=req.oldbalanceOrg,
+            newbalanceOrig=newbalance_orig,
+            oldbalanceDest=req.oldbalanceDest,
+            newbalanceDest=newbalance_dest,
+            risk_score=0.0,
+            decision="ALLOW",
+            heuristic_triggered="System Default: Low-Risk Transaction Type",
+            model_votes=json.dumps({"rf": 0.0, "xgb": 0.0, "lgbm": 0.0}),
+        )
+        return _build_whitelist_response(txn_uuid, req, entry)
+
+    # --- 3. Deterministic Heuristic ---
+    heuristic_triggered = None
     if (
-        req.type.strip().upper() == "TRANSFER"
+        type_upper in ("TRANSFER", "CASH_OUT")
         and abs(req.amount - req.oldbalanceOrg) < 0.001
     ):
         heuristic_triggered = "Account Drain Detected"
 
-    # --- 3. Feature engineering ---
-    type_key = req.type.strip().upper()
-    type_encoded = float(CATEGORY_MAP.get(type_key, -1))
+    # --- 4. Feature engineering ---
+    type_encoded = float(CATEGORY_MAP.get(type_upper, -1))
 
     raw_cont = {
         "amount": req.amount,
@@ -189,7 +209,7 @@ def run_predict(req: TransactionRequest) -> dict:
     feature_values = {"type_encoded": type_encoded, **scaled_cont}
     row = np.array([[feature_values[col] for col in FEATURE_ORDER]], dtype=np.float64)
 
-    # --- 4. Ensemble prediction (max voting) ---
+    # --- 5. Ensemble prediction (max voting) ---
     rf_prob = float(MODELS["rf"].predict_proba(row)[0][1])
     xgb_prob = float(MODELS["xgb"].predict_proba(row)[0][1])
     lgbm_prob = float(MODELS["lgbm"].predict_proba(row)[0][1])
@@ -202,7 +222,7 @@ def run_predict(req: TransactionRequest) -> dict:
         "lgbm": round(lgbm_prob * 100, 2),
     }
 
-    # --- 5. State routing with heuristic override ---
+    # --- 6. State routing with heuristic override ---
     if heuristic_triggered == "Account Drain Detected":
         if max_vote > BLOCK_THRESHOLD:
             decision = "BLOCK"
@@ -215,7 +235,7 @@ def run_predict(req: TransactionRequest) -> dict:
     else:
         decision = "ALLOW"
 
-    # --- 6. XAI (isolated from routing) ---
+    # --- 7. XAI (isolated from routing) ---
     cont_vec = np.array(
         [scaled_cont[col] for col in CONTINUOUS_FEATURE_ORDER], dtype=np.float64
     )
@@ -236,7 +256,7 @@ def run_predict(req: TransactionRequest) -> dict:
         )
     contributions.sort(key=lambda x: x["suspicion_score"], reverse=True)
 
-    # --- 7. Session tracking + Persist ---
+    # --- 8. Session tracking + Persist ---
     record_session_ts(req.session_id)
     entry = TransactionLedger(
         txn_uuid=txn_uuid,
@@ -263,7 +283,7 @@ def run_predict(req: TransactionRequest) -> dict:
         model_votes,
         newbalance_orig,
         newbalance_dest,
-        heuristic_triggered,
+        heuristic_triggered or "System Default: No heuristic rule triggered.",
         entry,
     )
 
@@ -292,7 +312,34 @@ def _build_block_response(
         "session_id": req.session_id,
         "txn_uuid": txn_uuid,
         "model_votes": {"rf": 100.0, "xgb": 100.0, "lgbm": 100.0},
-        "heuristic_triggered": None,
+        "heuristic_triggered": "System Default: Rate limit / velocity threshold exceeded.",
+    }
+
+
+def _build_whitelist_response(
+    txn_uuid: str, req: TransactionRequest, entry: TransactionLedger
+) -> dict:
+    from backend.database import SessionLocal
+
+    db = SessionLocal()
+    db.add(entry)
+    db.commit()
+    db.close()
+    return {
+        "status": "ALLOW",
+        "confidence_score": 0.0,
+        "euclidean_distance_to_fraud": 0.0,
+        "feature_contributions": [],
+        "top_suspicious_feature": None,
+        "newbalanceOrig": req.oldbalanceOrg - req.amount,
+        "newbalanceDest": req.oldbalanceDest + req.amount,
+        "type": req.type,
+        "amount": req.amount,
+        "oldbalanceOrg": req.oldbalanceOrg,
+        "session_id": req.session_id,
+        "txn_uuid": txn_uuid,
+        "model_votes": {"rf": 0.0, "xgb": 0.0, "lgbm": 0.0},
+        "heuristic_triggered": "System Default: Low-Risk Transaction Type",
     }
 
 

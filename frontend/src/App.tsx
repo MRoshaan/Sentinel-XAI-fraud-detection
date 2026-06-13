@@ -122,6 +122,15 @@ type ConfigState = {
 
 type TimelinePoint = { offset: number; ts: number };
 
+const FEATURE_ALIASES: Record<string, string> = {
+  amount: "Transaction Amount",
+  oldbalanceOrg: "Sender Balance (Before)",
+  newbalanceOrig: "Sender Balance (After)",
+  oldbalanceDest: "Receiver Balance (Before)",
+  newbalanceDest: "Receiver Balance (After)",
+  type_encoded: "Transaction Type",
+};
+
 const TRANSACTION_TYPES = [
   { backendValue: "PAYMENT", displayLabel: "Merchant Payment (Online Purchase)" },
   { backendValue: "TRANSFER", displayLabel: "Peer-to-Peer Transfer (Digital)" },
@@ -187,7 +196,7 @@ function AuditReceipt({ result, form, onExport }: { result: PredictResponse; for
           <div className="text-xs text-slate-400">Session: <span className="text-slate-200">{result.session_id ?? form.session_id}</span></div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="h-6 text-[10px] border-slate-600 text-white hover:bg-slate-800" onClick={() => onExport(uuid)}>
+          <Button size="sm" variant="outline" className="h-6 text-[10px] border-slate-600 text-slate-300 bg-slate-950 hover:bg-slate-800" onClick={() => onExport(uuid)}>
             Export JSON
           </Button>
           <Badge variant="outline" className={`text-xs font-bold ${badgeCls}`}>{isVelocity ? "RATE LIMIT" : result.status}</Badge>
@@ -270,7 +279,7 @@ function DivergenceChart({ contributions }: { contributions: FeatureContribution
     const d = c.distance_component;
     const normalized = Math.min((d / 3.0) * 100, 100);
     return {
-      feature: c.feature,
+      feature: FEATURE_ALIASES[c.feature] || c.feature,
       divergence: Number(d.toFixed(4)),
       fill: normalized > 60 ? "#22c55e" : normalized > 30 ? "#eab308" : "#ef4444",
     };
@@ -327,12 +336,8 @@ function SystemHealth({ health }: { health: HealthData | null }) {
 
 function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
   const [tab, setTab] = useState<"confusion" | "roc" | "precision">("confusion");
-  if (!metrics) return null;
-  const ens = metrics.ensemble;
-  const cm = ens.confusion_matrix;
-  const tn = cm[0][0], fp = cm[0][1], fn = cm[1][0], tp = cm[1][1];
-
   const rocData = useMemo(() => {
+    if (!metrics) return [];
     const models = ["rf", "xgb", "lgbm"] as const;
     const colors = { rf: "#22d3ee", xgb: "#a78bfa", lgbm: "#f472b6" };
     const result: { name: string; color: string; data: { fpr: number; tpr: number }[] }[] = [];
@@ -340,10 +345,14 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
       const curve = metrics.models[m].roc_curve;
       result.push({ name: metrics.models[m].name, color: colors[m], data: curve.fpr.map((f, i) => ({ fpr: f, tpr: curve.tpr[i] })) });
     }
-    const ensCurve = ens.roc_curve;
+    const ensCurve = metrics.ensemble.roc_curve;
     result.push({ name: "Ensemble (Max Vote)", color: "#22c55e", data: ensCurve.fpr.map((f, i) => ({ fpr: f, tpr: ensCurve.tpr[i] })) });
     return result;
   }, [metrics]);
+  if (!metrics) return null;
+  const ens = metrics.ensemble;
+  const cm = ens.confusion_matrix;
+  const tn = cm[0][0], fp = cm[0][1], fn = cm[1][0], tp = cm[1][1];
 
   return (
     <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur">
@@ -352,7 +361,7 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
         <div className="flex gap-1">
           {(["confusion", "roc", "precision"] as const).map((t) => (
             <Button key={t} size="sm" variant={tab === t ? "default" : "outline"}
-              className={`h-6 text-[10px] ${tab === t ? "bg-cyan-600 text-white" : "border-slate-700 text-white hover:bg-slate-800"}`}
+              className={`h-6 text-[10px] ${tab === t ? "bg-cyan-600 text-white" : "border-slate-700 text-slate-300 bg-slate-950 hover:bg-slate-800"}`}
               onClick={() => setTab(t)}>
               {t === "confusion" ? "Confusion Matrix" : t === "roc" ? "ROC Curves" : "Precision/Recall"}
             </Button>
@@ -486,7 +495,7 @@ function ModelAgreement({ items }: { items: any[] }) {
 function FeatureImportance({ importance }: { importance: Record<string, number> }) {
   const data = useMemo(() => {
     return Object.entries(importance).map(([feature, imp]) => ({
-      feature,
+      feature: FEATURE_ALIASES[feature] || feature,
       importance: Number((imp * 100).toFixed(1)),
       fill: imp > 0.25 ? "#22d3ee" : imp > 0.1 ? "#a78bfa" : "#64748b",
     })).sort((a, b) => b.importance - a.importance);
@@ -551,6 +560,7 @@ function App() {
   const [stressSummary, setStressSummary] = useState("");
 
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
   const [config, setConfig] = useState<ConfigState>({ allow_threshold: 0.35, block_threshold: 0.70 });
   const [configMsg, setConfigMsg] = useState("");
   const [batchResult, setBatchResult] = useState<BatchSummary | null>(null);
@@ -571,10 +581,12 @@ function App() {
   };
 
   const fetchLedger = useCallback(async () => {
+    setLedgerLoading(true);
     try {
       const res = await fetch(`${API}/api/v1/history?limit=50`);
       if (res.ok) { const d = await res.json(); setLedger(d.items); }
     } catch { /* */ }
+    setTimeout(() => setLedgerLoading(false), 400);
   }, []);
 
   const fetchHealth = useCallback(async () => {
@@ -685,7 +697,7 @@ function App() {
   const onStressTest = async () => {
     setStressLoading(true); setError(""); setStressSummary("");
     const backendValues = TRANSACTION_TYPES.map((t) => t.backendValue);
-    const jobs = Array.from({ length: 50 }, () => runPredictRequest({ type: backendValues[randomBetween(0, backendValues.length - 1)], amount: randomBetween(500, 150000), oldbalanceOrg: randomBetween(0, 200000), oldbalanceDest: randomBetween(0, 100000), session_id: form.session_id }));
+    const jobs = Array.from({ length: 50 }, (_, i) => runPredictRequest({ type: backendValues[randomBetween(0, backendValues.length - 1)], amount: randomBetween(500, 150000), oldbalanceOrg: randomBetween(0, 200000), oldbalanceDest: randomBetween(0, 100000), session_id: `STRESS-USER-${i + 1}` }));
     const startedAt = performance.now();
     try {
       const settled = await Promise.allSettled(jobs);
@@ -731,7 +743,7 @@ function App() {
     return statusColor(result.status);
   }, [result]);
 
-  const radarData = useMemo(() => (result?.feature_contributions ?? []).map((item) => ({ feature: item.feature, suspicion: Number(item.suspicion_score.toFixed(2)) })), [result]);
+  const radarData = useMemo(() => (result?.feature_contributions ?? []).map((item) => ({ feature: FEATURE_ALIASES[item.feature] || item.feature, suspicion: Number(item.suspicion_score.toFixed(2)) })), [result]);
 
   return (
     <main className="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(20,184,166,0.12),_transparent_50%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8">
@@ -823,6 +835,21 @@ function App() {
                     </div>
                     {result.txn_uuid && <span className="text-[10px] text-slate-500 font-mono">UUID: {result.txn_uuid}</span>}
                   </div>
+                  {(() => {
+                    const h = result.heuristic_triggered;
+                    const reasons: Record<string, string> = {
+                      ALLOW: "Transaction cleared: No anomalous patterns detected.",
+                      REVIEW: "Transaction flagged: Requires manual review.",
+                      BLOCK: "Transaction halted: High-confidence anomaly detected by ML ensemble.",
+                    };
+                    const display =
+                      h && !h.startsWith("System Default:")
+                        ? h
+                        : result.reason === "VELOCITY_EXCEEDED"
+                          ? "Session blocked: Rate limit exceeded."
+                          : reasons[result.status] || "Transaction processed.";
+                    return <p className="mt-2 text-sm text-slate-300">{display}</p>;
+                  })()}
 
                   {result.model_votes && (
                     <div className="mt-4 flex gap-2 flex-wrap">
@@ -863,7 +890,7 @@ function App() {
                         </ResponsiveContainer>
                       </div>
                       <DivergenceChart contributions={result.feature_contributions} />
-                      <div className="mt-4 text-sm text-slate-300">Top suspicious: <span className="font-semibold text-cyan-200">{result.top_suspicious_feature ?? "n/a"}</span></div>
+                      <div className="mt-4 text-sm text-slate-300">Top suspicious: <span className="font-semibold text-cyan-200">{(FEATURE_ALIASES[result.top_suspicious_feature ?? ""] || result.top_suspicious_feature) ?? "n/a"}</span></div>
                       <div className="mt-2 text-sm text-slate-300">Ending Balance: <span className="font-semibold text-white tabular-nums">${result.newbalanceOrig.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
                     </>
                   )}
@@ -894,7 +921,15 @@ function App() {
                 <h2 className="text-lg font-semibold text-cyan-100">Historical Audit Ledger</h2>
                 <p className="mt-0.5 text-[10px] text-slate-500">SQLite persistent storage &mdash; {ledger.length} records</p>
               </div>
-              <Button onClick={fetchAll} variant="outline" size="sm" className="h-6 text-[10px] border-slate-700 text-white hover:bg-slate-800">Refresh</Button>
+              <Button onClick={fetchAll} variant="outline" size="sm" className="h-6 text-[10px] border-slate-700 text-slate-300 bg-slate-950 hover:bg-slate-800" disabled={ledgerLoading}>
+  {ledgerLoading ? (
+    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  ) : null}
+  {ledgerLoading ? "Refreshing..." : "Refresh"}
+</Button>
             </div>
             <div className="max-h-[350px] overflow-auto rounded-lg border border-slate-700">
               <table className="w-full text-[11px]">
