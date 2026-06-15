@@ -142,9 +142,12 @@ def run_predict(req: TransactionRequest) -> dict:
     total_requests += 1
     txn_uuid = str(uuid.uuid4())
 
-    newbalance_orig = req.oldbalanceOrg - req.amount
-    newbalance_dest = req.oldbalanceDest + req.amount
     type_upper = req.type.strip().upper()
+    is_deposit = type_upper == "CASH_IN"
+    newbalance_orig = (
+        req.oldbalanceOrg + req.amount if is_deposit else req.oldbalanceOrg - req.amount
+    )
+    newbalance_dest = req.oldbalanceDest + req.amount
 
     # --- 1. Velocity check (pre-ML) ---
     if check_velocity(req.session_id):
@@ -321,6 +324,8 @@ def _build_whitelist_response(
 ) -> dict:
     from backend.database import SessionLocal
 
+    is_deposit = req.type.strip().upper() == "CASH_IN"
+
     db = SessionLocal()
     db.add(entry)
     db.commit()
@@ -331,7 +336,9 @@ def _build_whitelist_response(
         "euclidean_distance_to_fraud": 0.0,
         "feature_contributions": [],
         "top_suspicious_feature": None,
-        "newbalanceOrig": req.oldbalanceOrg - req.amount,
+        "newbalanceOrig": req.oldbalanceOrg + req.amount
+        if is_deposit
+        else req.oldbalanceOrg - req.amount,
         "newbalanceDest": req.oldbalanceDest + req.amount,
         "type": req.type,
         "amount": req.amount,

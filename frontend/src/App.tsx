@@ -179,7 +179,9 @@ function AuditReceipt({ result, form, onExport }: { result: PredictResponse; for
   const timestamp = useMemo(() => new Date().toLocaleString(), [result]);
   const amount = result.amount ?? Number(form.amount);
   const startBal = result.oldbalanceOrg ?? Number(form.oldbalanceOrg);
-  const endBal = result.newbalanceOrig ?? startBal - amount;
+  const txnType = result.type ?? form.type;
+  const isDeposit = txnType === "CASH_IN";
+  const endBal = result.newbalanceOrig ?? (isDeposit ? startBal + amount : startBal - amount);
   const isVelocity = result.reason === "VELOCITY_EXCEEDED";
   const badgeCls = isVelocity ? "text-red-400 border-red-500/40 bg-red-950/30"
     : result.status === "BLOCK" ? "text-red-400 border-red-500/40 bg-red-950/30"
@@ -218,7 +220,12 @@ function AuditReceipt({ result, form, onExport }: { result: PredictResponse; for
             <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Balance Ledger</div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between"><span className="text-slate-400">Start Balance</span><span className="text-slate-200 tabular-nums">${startBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">&minus; Amount</span><span className="text-rose-400 tabular-nums">&minus;${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">{isDeposit ? "+ Amount" : "&minus; Amount"}</span>
+                <span className={`tabular-nums ${isDeposit ? "text-emerald-400" : "text-rose-400"}`}>
+                  {isDeposit ? "+" : "&minus;"}${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
               <div className="flex justify-between border-t border-slate-700/40 pt-1 font-semibold"><span className="text-slate-300">Ending Balance</span><span className="text-slate-100 tabular-nums">${endBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
             </div>
           </div>
@@ -753,8 +760,16 @@ function App() {
 
   const radarData = useMemo(() => (result?.feature_contributions ?? []).map((item) => ({ feature: FEATURE_ALIASES[item.feature] || item.feature, suspicion: Number(item.suspicion_score.toFixed(2)) })), [result]);
 
+  const _txnType = result?.type ?? form.type;
+  const _isDeposit = _txnType === "CASH_IN";
+  const _startBal = (result?.oldbalanceOrg ?? Number(form.oldbalanceOrg)) || 0;
+  const _txnAmt = (result?.amount ?? Number(form.amount)) || 0;
+  const _calculatedEndBal = _isDeposit ? _startBal + _txnAmt : _startBal - _txnAmt;
+  const _formattedAmt = `${_isDeposit ? "+" : "-"}$${_txnAmt.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+
   return (
-    <main className="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(20,184,166,0.12),_transparent_50%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8 print:hidden">
+    <>
+      <main className="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(20,184,166,0.12),_transparent_50%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8 print:hidden">
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -909,7 +924,7 @@ function App() {
                       </div>
                       <DivergenceChart contributions={result.feature_contributions} />
                       <div className="mt-4 text-sm text-slate-300">Top suspicious: <span className="font-semibold text-cyan-200">{(FEATURE_ALIASES[result.top_suspicious_feature ?? ""] || result.top_suspicious_feature) ?? "n/a"}</span></div>
-                      <div className="mt-2 text-sm text-slate-300">Ending Balance: <span className="font-semibold text-white tabular-nums">${result.newbalanceOrig.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+                      <div className="mt-2 text-sm text-slate-300">Ending Balance: <span className="font-semibold text-white tabular-nums">${_calculatedEndBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
                     </>
                   )}
                   <AuditReceipt result={result} form={form} onExport={onExport} />
@@ -985,67 +1000,84 @@ function App() {
           </Card>
         )}
       </div>
-
-      {/* Printable Receipt — hidden on screen, full-page on print */}
-      <div className="hidden print:block print:absolute print:inset-0 print:bg-white print:text-black print:p-8 print:w-full print:h-screen print:z-50 print:overflow-auto">
-        {result ? (
-          <div className="max-w-2xl mx-auto">
-            <div className="border-b-2 border-black pb-4 mb-6">
-              <h1 className="text-2xl font-bold tracking-tight">Sentinel-XAI</h1>
-              <p className="text-sm text-gray-600">Official Transaction Audit Record</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm mb-6">
-              <div className="text-gray-500">Print Date/Time</div>
-              <div className="font-semibold">{new Date().toLocaleString()}</div>
-              <div className="text-gray-500">Transaction UUID</div>
-              <div className="font-mono font-semibold">{result.txn_uuid}</div>
-              <div className="text-gray-500">Session ID</div>
-              <div className="font-mono">{result.session_id}</div>
-              <div className="text-gray-500">Transaction Type</div>
-              <div className="font-semibold">{result.type}</div>
-            </div>
-
-            <div className="border-t border-gray-300 pt-4 mb-6">
-              <h2 className="text-lg font-bold mb-2">Financial Details</h2>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
-                <div className="text-gray-500">Transaction Amount</div>
-                <div className="font-semibold">${(result.amount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-                <div className="text-gray-500">Sender Balance (Before)</div>
-                <div className="font-semibold">${(result.oldbalanceOrg ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-                <div className="text-gray-500">Sender Balance (After)</div>
-                <div className="font-semibold">${result.newbalanceOrig.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-                <div className="text-gray-500">Receiver Balance (After)</div>
-                <div className="font-semibold">${(result.newbalanceDest ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-300 pt-4">
-              <h2 className="text-lg font-bold mb-2">AI Assessment</h2>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
-                <div className="text-gray-500">Max-Vote Confidence Score</div>
-                <div className="font-semibold">{result.confidence_score.toFixed(2)}%</div>
-                <div className="text-gray-500">Final Routing Decision</div>
-                <div className={`font-bold text-lg ${result.status === "ALLOW" ? "text-green-700" : result.status === "REVIEW" ? "text-yellow-700" : "text-red-700"}`}>{result.status}</div>
-                <div className="text-gray-500">Heuristic Triggered</div>
-                <div className="font-semibold">{result.heuristic_triggered || "None"}</div>
-                <div className="text-gray-500">Fraud Distance</div>
-                <div className="font-mono">{result.euclidean_distance_to_fraud.toFixed(4)}</div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-300 mt-8 pt-4 text-[10px] text-gray-400 text-center">
-              <p>Sentinel-XAI Fraud Detection System — Max-Vote Ensemble (RF + XGBoost + LightGBM)</p>
-              <p className="mt-1">This document is a computer-generated official audit record.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <p>No transaction data available. Run an analysis first, then print.</p>
-          </div>
-        )}
-      </div>
     </main>
+
+    {/* Printable Receipt — outside print:hidden main, full-page on print */}
+    <style>{`@media print{::-webkit-scrollbar{display:none!important}body{overflow:visible!important}}`}</style>
+    <div className="hidden print:block print:fixed print:inset-0 print:bg-white print:text-black print:p-12 print:w-full print:h-auto print:min-h-full print:overflow-visible print:z-50">
+      {result ? (
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center border-b-2 border-black pb-6 mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-black">SENTINEL-XAI</h1>
+            <p className="text-base text-gray-600 mt-1">OFFICIAL AUDIT RECORD</p>
+          </div>
+
+          <table className="w-full text-sm mb-8">
+            <tbody>
+              <tr><td className="text-gray-500 py-1 w-1/3">Print Date/Time</td><td className="font-semibold text-black py-1">{new Date().toLocaleString()}</td></tr>
+              <tr><td className="text-gray-500 py-1">Transaction UUID</td><td className="font-mono font-semibold text-black py-1">{result.txn_uuid}</td></tr>
+              <tr><td className="text-gray-500 py-1">Session ID</td><td className="font-mono text-black py-1">{result.session_id}</td></tr>
+              <tr><td className="text-gray-500 py-1">Transaction Type</td><td className="font-semibold text-black py-1">{result.type}</td></tr>
+            </tbody>
+          </table>
+
+          <h2 className="text-lg font-bold text-black border-b border-gray-300 pb-2 mb-4">Financial Ledger</h2>
+          <table className="w-full text-sm border-collapse mb-8">
+            <thead>
+              <tr className="border-b border-gray-400">
+                <th className="text-left text-gray-600 font-medium py-2 w-1/2">Description</th>
+                <th className="text-right text-gray-600 font-medium py-2 w-1/2">Amount (USD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 text-black">Sender Starting Balance</td>
+                <td className="py-2 text-right font-semibold text-black">${(result.oldbalanceOrg ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+              </tr>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 text-black">Transaction Amount</td>
+                <td className={`py-2 text-right font-semibold ${_isDeposit ? "text-green-700" : "text-black"}`}>{_formattedAmt}</td>
+              </tr>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 text-black">Receiver New Balance</td>
+                <td className="py-2 text-right font-semibold text-black">${(result.newbalanceDest ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+              </tr>
+              <tr>
+                <td className="py-3 font-bold text-black text-base">Ending Balance (Sender)</td>
+                <td className="py-3 text-right font-bold text-black text-base">${_calculatedEndBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="border-2 border-black rounded-lg p-6 mb-8">
+            <h2 className="text-lg font-bold text-black mb-4 text-center">AI RISK ASSESSMENT</h2>
+            <div className="grid grid-cols-2 gap-y-3 text-sm">
+              <div className="text-gray-500">Max-Vote Confidence Score</div>
+              <div className="text-right font-bold text-xl text-black">{result.confidence_score.toFixed(2)}%</div>
+              <div className="text-gray-500">Final Routing Decision</div>
+              <div className={`text-right font-bold text-xl ${result.status === "ALLOW" ? "text-green-700" : result.status === "REVIEW" ? "text-yellow-700" : "text-red-700"}`}>{result.status}</div>
+              <div className="text-gray-500">Euclidean Distance to Fraud</div>
+              <div className="text-right font-mono font-semibold text-black">{result.euclidean_distance_to_fraud.toFixed(4)}</div>
+            </div>
+            {result.heuristic_triggered && (
+              <div className="mt-4 border border-red-400 bg-red-50 rounded p-3 text-center">
+                <span className="font-bold text-red-700 text-sm">HEURISTIC ALERT: {result.heuristic_triggered}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-gray-300 pt-4 text-[10px] text-gray-500 text-center">
+            <p>Sentinel-XAI Fraud Detection System — Max-Vote Ensemble (RF + XGBoost + LightGBM)</p>
+            <p className="mt-1">This is a computer-generated official audit record. Verified at {new Date().toLocaleString()}.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full text-gray-500 text-lg">
+          No transaction data available. Run an analysis first, then print.
+        </div>
+      )}
+    </div>
+    </>
   );
 }
 
