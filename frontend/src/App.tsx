@@ -343,10 +343,11 @@ function SystemHealth({ health }: { health: HealthData | null }) {
 
 function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
   const [tab, setTab] = useState<"confusion" | "roc" | "precision">("confusion");
+  const modelColors = { rf: "#8b5cf6", xgb: "#06b6d4", lgbm: "#ec4899" };
   const rocData = useMemo(() => {
     if (!metrics) return [];
     const models = ["rf", "xgb", "lgbm"] as const;
-    const colors = { rf: "#8b5cf6", xgb: "#06b6d4", lgbm: "#ec4899" };
+    const colors = modelColors;
     const result: { name: string; color: string; data: { fpr: number; tpr: number }[] }[] = [];
     for (const m of models) {
       const curve = metrics.models[m].roc_curve;
@@ -402,9 +403,9 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
                 <div key={key} className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2">
                   <span className="text-xs text-slate-300 w-20">{m.name}</span>
                   <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${m.roc_auc * 100}%`, backgroundColor: colors[key as keyof typeof colors] || "#8b5cf6" }} />
+                    <div className="h-full rounded-full" style={{ width: `${m.roc_auc * 100}%`, backgroundColor: modelColors[key as keyof typeof modelColors] || "#8b5cf6" }} />
                   </div>
-                  <span className="text-xs font-mono w-14 text-right" style={{ color: colors[key as keyof typeof colors] || "#8b5cf6" }}>{m.roc_auc}</span>
+                  <span className="text-xs font-mono w-14 text-right" style={{ color: modelColors[key as keyof typeof modelColors] || "#8b5cf6" }}>{m.roc_auc}</span>
                 </div>
               ))}
               <div className="flex items-center gap-3 rounded-lg border border-emerald-700/40 bg-emerald-950/20 px-3 py-2">
