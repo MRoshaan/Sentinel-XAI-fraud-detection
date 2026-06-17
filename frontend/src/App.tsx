@@ -150,13 +150,13 @@ function randomBetween(min: number, max: number): number {
 }
 function statusColor(s: Decision | string) {
   if (s === "BLOCK") return "bg-red-600 text-white";
-  if (s === "REVIEW") return "bg-yellow-500 text-yellow-950";
+  if (s === "REVIEW") return "bg-amber-500 text-amber-950";
   if (s === "DECLINED") return "bg-orange-600 text-white";
   return "bg-emerald-600 text-white";
 }
 function statusDot(s: Decision | string) {
   if (s === "BLOCK") return "bg-red-500";
-  if (s === "REVIEW") return "bg-yellow-500";
+  if (s === "REVIEW") return "bg-amber-500";
   if (s === "DECLINED") return "bg-orange-500";
   return "bg-emerald-500";
 }
@@ -186,27 +186,27 @@ function AuditReceipt({ result, form, onExport }: { result: PredictResponse; for
   const badgeCls = isVelocity ? "text-red-400 border-red-500/40 bg-red-950/30"
     : result.status === "BLOCK" ? "text-red-400 border-red-500/40 bg-red-950/30"
     : result.status === "DECLINED" ? "text-orange-400 border-orange-500/40 bg-orange-950/30"
-    : result.status === "REVIEW" ? "text-yellow-400 border-yellow-500/40 bg-yellow-950/30"
+    : result.status === "REVIEW" ? "text-amber-400 border-amber-500/40 bg-amber-950/30"
     : "text-emerald-400 border-emerald-500/40 bg-emerald-950/30";
   return (
-    <div className="mt-5 rounded-xl border border-stone-700/60 bg-stone-950/90 p-5 font-mono text-sm backdrop-blur">
+    <div className="mt-5 rounded-xl border border-slate-700/60 bg-slate-950/90 p-5 font-mono text-sm backdrop-blur">
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.25em] text-stone-500">Digital Audit Receipt</div>
-          <div className="mt-1 text-xs text-stone-400">UUID: <span className="text-stone-600">{uuid}</span></div>
-          <div className="text-xs text-stone-400">Time: <span className="text-stone-600">{timestamp}</span></div>
-          <div className="text-xs text-stone-400">Session: <span className="text-stone-600">{result.session_id ?? form.session_id}</span></div>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-slate-500">Digital Audit Receipt</div>
+          <div className="mt-1 text-xs text-slate-400">UUID: <span className="text-slate-300">{uuid}</span></div>
+          <div className="text-xs text-slate-400">Time: <span className="text-slate-300">{timestamp}</span></div>
+          <div className="text-xs text-slate-400">Session: <span className="text-slate-300">{result.session_id ?? form.session_id}</span></div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="h-6 text-[10px] border-stone-600 text-stone-500 bg-stone-950 hover:bg-stone-800" onClick={() => onExport(uuid)}>
+          <Button size="sm" variant="outline" className="h-6 text-[10px] border-slate-600 text-slate-400 bg-slate-950 hover:bg-slate-800" onClick={() => onExport(uuid)}>
             Export JSON
           </Button>
           <Badge variant="outline" className={`text-xs font-bold ${badgeCls}`}>{isVelocity ? "RATE LIMIT" : result.status}</Badge>
         </div>
       </div>
       {result.heuristic_triggered && (
-        <div className="mt-3 rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-3">
-          <div className="text-xs font-bold text-yellow-400">Heuristic Triggered: {result.heuristic_triggered}</div>
+        <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-950/20 p-3">
+          <div className="text-xs font-bold text-amber-400">Heuristic Triggered: {result.heuristic_triggered}</div>
         </div>
       )}
       {isVelocity ? (
@@ -216,20 +216,20 @@ function AuditReceipt({ result, form, onExport }: { result: PredictResponse; for
         </div>
       ) : (
         <>
-          <div className="mt-4 border-t border-dashed border-stone-700/60 pt-3">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-2">Balance Ledger</div>
+          <div className="mt-4 border-t border-dashed border-slate-700/60 pt-3">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Balance Ledger</div>
             <div className="space-y-1 text-xs">
-              <div className="flex justify-between"><span className="text-stone-400">Start Balance</span><span className="text-stone-600 tabular-nums">${startBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span className="text-slate-400">Start Balance</span><span className="text-slate-300 tabular-nums">${startBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
               <div className="flex justify-between">
-                <span className="text-stone-400">{isDeposit ? "+ Amount" : "&minus; Amount"}</span>
+                <span className="text-slate-400">{isDeposit ? "+ Amount" : "&minus; Amount"}</span>
                 <span className={`tabular-nums ${isDeposit ? "text-emerald-400" : "text-rose-400"}`}>
                   {isDeposit ? "+" : "&minus;"}${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex justify-between border-t border-stone-700/40 pt-1 font-semibold"><span className="text-stone-500">Ending Balance</span><span className="text-stone-700 tabular-nums">${endBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between border-t border-slate-700/40 pt-1 font-semibold"><span className="text-slate-300">Ending Balance</span><span className="text-slate-100 tabular-nums">${endBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
             </div>
           </div>
-          <div className="mt-3 border-t border-dashed border-stone-700/60 pt-3 text-[11px] text-stone-500">
+          <div className="mt-3 border-t border-dashed border-slate-700/60 pt-3 text-[11px] text-slate-500">
             {result.status === "DECLINED" ? `Reason: ${result.reason}` : `Fraud Probability: ${result.confidence_score.toFixed(2)}% — Distance: ${result.euclidean_distance_to_fraud.toFixed(4)}`}
           </div>
         </>
@@ -243,17 +243,17 @@ function RiskDistributionBar({ summary }: { summary: Record<string, number> }) {
   if (total === 0) return null;
   const segs = [
     { key: "ALLOW", color: "bg-emerald-500", label: "Allow" },
-    { key: "REVIEW", color: "bg-yellow-500", label: "Review" },
+    { key: "REVIEW", color: "bg-amber-500", label: "Review" },
     { key: "BLOCK", color: "bg-red-500", label: "Block" },
     { key: "DECLINED", color: "bg-orange-500", label: "Declined" },
   ];
   return (
     <div className="mt-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-2">Risk Distribution</div>
+      <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Risk Distribution</div>
       <div className="flex h-6 w-full overflow-hidden rounded-md">
         {segs.map((s) => { const c = summary[s.key] ?? 0; const p = (c / total) * 100; return p > 0 ? <div key={s.key} className={`${s.color} flex items-center justify-center text-[10px] font-bold text-white`} style={{ width: `${p}%` }} title={`${s.label}: ${c}`}>{p > 8 ? c : ""}</div> : null; })}
       </div>
-      <div className="mt-1.5 flex flex-wrap gap-3 text-[10px] text-stone-400">
+      <div className="mt-1.5 flex flex-wrap gap-3 text-[10px] text-slate-400">
         {segs.map((s) => <span key={s.key} className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded-full ${s.color}`} />{s.label}: {summary[s.key] ?? 0}</span>)}
       </div>
     </div>
@@ -265,15 +265,15 @@ function SessionTimeline({ points }: { points: TimelinePoint[] }) {
   const data = points.map((p, i) => ({ idx: i + 1, seconds_ago: p.offset }));
   return (
     <div className="mt-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-2">Session Activity ({points.length} req/min)</div>
-      <div className="h-[80px] w-full rounded-lg border border-stone-700 bg-stone-950/60 p-2">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Session Activity ({points.length} req/min)</div>
+      <div className="h-[80px] w-full rounded-lg border border-slate-700 bg-slate-950/60 p-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
-            <CartesianGrid stroke="#292524" />
-            <XAxis dataKey="idx" tick={{ fill: "#78716c", fontSize: 9 }} />
-            <YAxis tick={{ fill: "#78716c", fontSize: 9 }} />
-            <Tooltip contentStyle={{ backgroundColor: "#1c1917", border: "1px solid #44403c", color: "#e2e8f0", fontSize: 11 }} formatter={(v: number) => [`${v.toFixed(1)}s ago`, "Time"]} />
-            <Line type="monotone" dataKey="seconds_ago" stroke="#f59e0b" strokeWidth={2} dot={{ fill: "#92400e", r: 3 }} />
+            <CartesianGrid stroke="#1e293b" />
+            <XAxis dataKey="idx" tick={{ fill: "#64748b", fontSize: 9 }} />
+            <YAxis tick={{ fill: "#64748b", fontSize: 9 }} />
+            <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", color: "#e2e8f0", fontSize: 11 }} formatter={(v: number) => [`${v.toFixed(1)}s ago`, "Time"]} />
+            <Line type="monotone" dataKey="seconds_ago" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: "#6d28d9", r: 3 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -294,19 +294,19 @@ function DivergenceChart({ contributions }: { contributions: FeatureContribution
   if (data.length === 0) return null;
   return (
     <div className="mt-5">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-2">Feature Divergence from Fraud Pattern</div>
-      <div className="h-[200px] w-full rounded-lg border border-stone-700 bg-stone-950/60 p-3">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Feature Divergence from Fraud Pattern</div>
+      <div className="h-[200px] w-full rounded-lg border border-slate-700 bg-slate-950/60 p-3">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
-            <CartesianGrid stroke="#292524" horizontal={false} />
-            <XAxis type="number" domain={[0, 3]} tick={{ fill: "#78716c", fontSize: 10 }} />
+            <CartesianGrid stroke="#1e293b" horizontal={false} />
+            <XAxis type="number" domain={[0, 3]} tick={{ fill: "#64748b", fontSize: 10 }} />
             <YAxis dataKey="feature" type="category" width={110} tick={{ fill: "#cbd5e1", fontSize: 10 }} />
-            <Tooltip contentStyle={{ backgroundColor: "#1c1917", border: "1px solid #44403c", color: "#e2e8f0", fontSize: 11 }} formatter={(v: number) => [`${v.toFixed(4)}`, "Distance"]} />
+            <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", color: "#e2e8f0", fontSize: 11 }} formatter={(v: number) => [`${v.toFixed(4)}`, "Distance"]} />
             <Bar dataKey="divergence" radius={[0, 4, 4, 0]}>{data.map((e, i) => <Cell key={i} fill={e.fill} />)}</Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-1.5 flex gap-4 text-[10px] text-stone-400">
+      <div className="mt-1.5 flex gap-4 text-[10px] text-slate-400">
         <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-red-500" />Risky (Close to fraud pattern)</span>
         <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-yellow-500" />Moderate</span>
         <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />Safe (Far from fraud pattern)</span>
@@ -319,20 +319,20 @@ function SystemHealth({ health }: { health: HealthData | null }) {
   if (!health) return null;
   const items = [
     { label: "Status", value: health.status, color: "text-emerald-400" },
-    { label: "Uptime", value: health.uptime, color: "text-stone-700" },
-    { label: "Models", value: `${health.model_count} loaded`, color: "text-amber-400" },
+    { label: "Uptime", value: health.uptime, color: "text-slate-100" },
+    { label: "Models", value: `${health.model_count} loaded`, color: "text-cyan-400" },
     { label: "Database", value: health.database, color: "text-emerald-400" },
-    { label: "Requests", value: health.total_requests.toLocaleString(), color: "text-stone-700" },
-    { label: "DB Records", value: health.total_transactions_db.toLocaleString(), color: "text-stone-700" },
-    { label: "Sessions", value: health.active_sessions.toString(), color: "text-amber-400" },
+    { label: "Requests", value: health.total_requests.toLocaleString(), color: "text-slate-100" },
+    { label: "DB Records", value: health.total_transactions_db.toLocaleString(), color: "text-slate-100" },
+    { label: "Sessions", value: health.active_sessions.toString(), color: "text-cyan-400" },
   ];
   return (
-    <Card className="border-stone-800 bg-stone-900/80 p-4 backdrop-blur border-t-[1px] border-t-amber-500/10">
-      <h2 className="text-sm font-semibold text-amber-100 mb-3">System Health</h2>
+    <Card className="border-slate-800 bg-slate-900/80 p-4 backdrop-blur border-t-[1px] border-t-violet-500/20">
+      <h2 className="text-sm font-semibold text-violet-200 mb-3">System Health</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {items.map((it) => (
-          <div key={it.label} className="rounded-lg border border-stone-700 bg-stone-950/60 p-2 text-center">
-            <div className="text-[9px] uppercase tracking-wider text-stone-500">{it.label}</div>
+          <div key={it.label} className="rounded-lg border border-slate-700 bg-slate-950/60 p-2 text-center">
+            <div className="text-[9px] uppercase tracking-wider text-slate-500">{it.label}</div>
             <div className={`mt-0.5 text-sm font-semibold tabular-nums ${it.color}`}>{it.value}</div>
           </div>
         ))}
@@ -346,7 +346,7 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
   const rocData = useMemo(() => {
     if (!metrics) return [];
     const models = ["rf", "xgb", "lgbm"] as const;
-    const colors = { rf: "#f59e0b", xgb: "#a78bfa", lgbm: "#f472b6" };
+    const colors = { rf: "#8b5cf6", xgb: "#06b6d4", lgbm: "#ec4899" };
     const result: { name: string; color: string; data: { fpr: number; tpr: number }[] }[] = [];
     for (const m of models) {
       const curve = metrics.models[m].roc_curve;
@@ -362,13 +362,13 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
   const tn = cm[0][0], fp = cm[0][1], fn = cm[1][0], tp = cm[1][1];
 
   return (
-    <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
+    <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-amber-100">ML Metrics Dashboard</h2>
+        <h2 className="text-lg font-semibold text-violet-200">ML Metrics Dashboard</h2>
         <div className="flex gap-1">
           {(["confusion", "roc", "precision"] as const).map((t) => (
             <Button key={t} size="sm" variant={tab === t ? "default" : "outline"}
-              className={`h-6 text-[10px] ${tab === t ? "bg-amber-600 text-white" : "border-stone-700 text-stone-500 bg-stone-950 hover:bg-stone-800"}`}
+              className={`h-6 text-[10px] ${tab === t ? "bg-violet-600 text-white" : "border-slate-700 text-slate-400 bg-slate-950 hover:bg-slate-800"}`}
               onClick={() => setTab(t)}>
               {t === "confusion" ? "Confusion Matrix" : t === "roc" ? "ROC Curves" : "Precision/Recall"}
             </Button>
@@ -379,37 +379,37 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
       {tab === "confusion" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-xs text-stone-400 mb-2">Ensemble Confusion Matrix (Test: {metrics.test_size.toLocaleString()} samples)</h3>
-            <div className="rounded-lg border border-stone-700 bg-stone-950/60 p-4">
+            <h3 className="text-xs text-slate-400 mb-2">Ensemble Confusion Matrix (Test: {metrics.test_size.toLocaleString()} samples)</h3>
+            <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-4">
               <table className="w-full text-xs">
-                <thead><tr><th className="px-2 py-1 text-stone-500" /><th className="px-2 py-1 text-center text-stone-400">Pred Legit</th><th className="px-2 py-1 text-center text-stone-400">Pred Fraud</th></tr></thead>
+                <thead><tr><th className="px-2 py-1 text-slate-500" /><th className="px-2 py-1 text-center text-slate-400">Pred Legit</th><th className="px-2 py-1 text-center text-slate-400">Pred Fraud</th></tr></thead>
                 <tbody>
-                  <tr><td className="px-2 py-1 text-stone-400 font-medium">Actual Legit</td><td className="px-2 py-1 text-center text-emerald-400 font-mono">{tn.toLocaleString()}</td><td className="px-2 py-1 text-center text-yellow-400 font-mono">{fp.toLocaleString()}</td></tr>
-                  <tr><td className="px-2 py-1 text-stone-400 font-medium">Actual Fraud</td><td className="px-2 py-1 text-center text-orange-400 font-mono">{fn.toLocaleString()}</td><td className="px-2 py-1 text-center text-red-400 font-mono">{tp.toLocaleString()}</td></tr>
+                  <tr><td className="px-2 py-1 text-slate-400 font-medium">Actual Legit</td><td className="px-2 py-1 text-center text-emerald-400 font-mono">{tn.toLocaleString()}</td><td className="px-2 py-1 text-center text-amber-400 font-mono">{fp.toLocaleString()}</td></tr>
+                  <tr><td className="px-2 py-1 text-slate-400 font-medium">Actual Fraud</td><td className="px-2 py-1 text-center text-orange-400 font-mono">{fn.toLocaleString()}</td><td className="px-2 py-1 text-center text-red-400 font-mono">{tp.toLocaleString()}</td></tr>
                 </tbody>
               </table>
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2 text-[10px]">
-              <div className="text-center"><span className="text-stone-500">Accuracy</span><div className="text-stone-700 font-semibold">{((tn + tp) / (tn + fp + fn + tp) * 100).toFixed(2)}%</div></div>
-              <div className="text-center"><span className="text-stone-500">Fraud Caught</span><div className="text-red-400 font-semibold">{tp.toLocaleString()}/{(tp + fn).toLocaleString()}</div></div>
-              <div className="text-center"><span className="text-stone-500">False Alarms</span><div className="text-yellow-400 font-semibold">{fp.toLocaleString()}</div></div>
+              <div className="text-center"><span className="text-slate-500">Accuracy</span><div className="text-slate-100 font-semibold">{((tn + tp) / (tn + fp + fn + tp) * 100).toFixed(2)}%</div></div>
+              <div className="text-center"><span className="text-slate-500">Fraud Caught</span><div className="text-red-400 font-semibold">{tp.toLocaleString()}/{(tp + fn).toLocaleString()}</div></div>
+              <div className="text-center"><span className="text-slate-500">False Alarms</span><div className="text-amber-400 font-semibold">{fp.toLocaleString()}</div></div>
             </div>
           </div>
           <div>
-            <h3 className="text-xs text-stone-400 mb-2">Per-Model ROC AUC</h3>
+            <h3 className="text-xs text-slate-400 mb-2">Per-Model ROC AUC</h3>
             <div className="space-y-2">
               {Object.entries(metrics.models).map(([key, m]) => (
-                <div key={key} className="flex items-center gap-3 rounded-lg border border-stone-700 bg-stone-950/60 px-3 py-2">
-                  <span className="text-xs text-stone-500 w-20">{m.name}</span>
-                  <div className="flex-1 h-3 bg-stone-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${m.roc_auc * 100}%` }} />
+                <div key={key} className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2">
+                  <span className="text-xs text-slate-300 w-20">{m.name}</span>
+                  <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${m.roc_auc * 100}%`, backgroundColor: colors[key as keyof typeof colors] || "#8b5cf6" }} />
                   </div>
-                  <span className="text-xs font-mono text-amber-400 w-14 text-right">{m.roc_auc}</span>
+                  <span className="text-xs font-mono w-14 text-right" style={{ color: colors[key as keyof typeof colors] || "#8b5cf6" }}>{m.roc_auc}</span>
                 </div>
               ))}
               <div className="flex items-center gap-3 rounded-lg border border-emerald-700/40 bg-emerald-950/20 px-3 py-2">
                 <span className="text-xs text-emerald-300 w-20 font-semibold">Ensemble</span>
-                <div className="flex-1 h-3 bg-stone-800 rounded-full overflow-hidden">
+                <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${ens.roc_auc * 100}%` }} />
                 </div>
                 <span className="text-xs font-mono text-emerald-400 w-14 text-right font-bold">{ens.roc_auc}</span>
@@ -421,14 +421,14 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
 
       {tab === "roc" && (
         <div>
-          <h3 className="text-xs text-stone-400 mb-2">ROC Curves — All Models vs Ensemble</h3>
-          <div className="h-[300px] w-full rounded-lg border border-stone-700 bg-stone-950/60 p-3">
+          <h3 className="text-xs text-slate-400 mb-2">ROC Curves — All Models vs Ensemble</h3>
+          <div className="h-[300px] w-full rounded-lg border border-slate-700 bg-slate-950/60 p-3">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
-                <CartesianGrid stroke="#292524" />
-                <XAxis type="number" dataKey="fpr" domain={[0, 1]} tick={{ fill: "#78716c", fontSize: 10 }} label={{ value: "False Positive Rate", position: "bottom", fill: "#78716c", fontSize: 10, offset: -5 }} />
-                <YAxis type="number" dataKey="tpr" domain={[0, 1]} tick={{ fill: "#78716c", fontSize: 10 }} label={{ value: "True Positive Rate", angle: -90, position: "insideLeft", fill: "#78716c", fontSize: 10 }} />
-                <Tooltip contentStyle={{ backgroundColor: "#1c1917", border: "1px solid #44403c", color: "#e2e8f0", fontSize: 11 }} />
+                <CartesianGrid stroke="#1e293b" />
+                <XAxis type="number" dataKey="fpr" domain={[0, 1]} tick={{ fill: "#64748b", fontSize: 10 }} label={{ value: "False Positive Rate", position: "bottom", fill: "#64748b", fontSize: 10, offset: -5 }} />
+                <YAxis type="number" dataKey="tpr" domain={[0, 1]} tick={{ fill: "#64748b", fontSize: 10 }} label={{ value: "True Positive Rate", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 10 }} />
+                <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", color: "#e2e8f0", fontSize: 11 }} />
                 {rocData.map((r) => (
                   <Line key={r.name} data={r.data} type="monotone" dataKey="tpr" stroke={r.color} strokeWidth={2} dot={false} name={r.name} />
                 ))}
@@ -438,22 +438,22 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
           </div>
           <div className="mt-2 flex flex-wrap gap-3 text-[10px]">
             {rocData.map((r) => <span key={r.name} className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: r.color }} />{r.name} (AUC: {r.name === "Ensemble (Max Vote)" ? ens.roc_auc : metrics.models[r.name === "RandomForest" ? "rf" : r.name === "XGBoost" ? "xgb" : "lgbm"]?.roc_auc})</span>)}
-            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-stone-500" />Random baseline</span>
+            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-slate-500" />Random baseline</span>
           </div>
         </div>
       )}
 
       {tab === "precision" && (
         <div>
-          <h3 className="text-xs text-stone-400 mb-3">Precision / Recall / F1 — Fraud Class</h3>
+          <h3 className="text-xs text-slate-400 mb-3">Precision / Recall / F1 — Fraud Class</h3>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[...Object.entries(metrics.models).map(([, m]) => ({ name: m.name, ...m.metrics.fraud })), { name: "Ensemble (Max Vote)", ...ens.metrics.fraud }].map((m) => (
-              <div key={m.name} className={`rounded-lg border p-3 ${m.name === "Ensemble (Max Vote)" ? "border-emerald-700/40 bg-emerald-950/20" : "border-stone-700 bg-stone-950/60"}`}>
-                <div className={`text-xs font-semibold mb-2 ${m.name === "Ensemble (Max Vote)" ? "text-emerald-300" : "text-stone-500"}`}>{m.name}</div>
+              <div key={m.name} className={`rounded-lg border p-3 ${m.name === "Ensemble (Max Vote)" ? "border-emerald-700/40 bg-emerald-950/20" : "border-slate-700 bg-slate-950/60"}`}>
+                <div className={`text-xs font-semibold mb-2 ${m.name === "Ensemble (Max Vote)" ? "text-emerald-300" : "text-slate-300"}`}>{m.name}</div>
                 <div className="space-y-1.5 text-[11px]">
-                  <div className="flex justify-between"><span className="text-stone-500">Precision</span><span className="text-stone-700 font-mono">{(m.precision * 100).toFixed(2)}%</span></div>
-                  <div className="flex justify-between"><span className="text-stone-500">Recall</span><span className="text-stone-700 font-mono">{(m.recall * 100).toFixed(2)}%</span></div>
-                  <div className="flex justify-between"><span className="text-stone-500">F1</span><span className="text-stone-700 font-mono">{(m.f1 * 100).toFixed(2)}%</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Precision</span><span className="text-slate-100 font-mono">{(m.precision * 100).toFixed(2)}%</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Recall</span><span className="text-slate-100 font-mono">{(m.recall * 100).toFixed(2)}%</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">F1</span><span className="text-slate-100 font-mono">{(m.f1 * 100).toFixed(2)}%</span></div>
                 </div>
               </div>
             ))}
@@ -467,12 +467,12 @@ function MLMetricsDashboard({ metrics }: { metrics: any | null }) {
 function ModelAgreement({ items }: { items: any[] }) {
   if (items.length === 0) return null;
   return (
-    <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-      <h2 className="text-lg font-semibold text-amber-100 mb-3">Model Agreement</h2>
-      <div className="overflow-auto rounded-lg border border-stone-700">
+    <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+      <h2 className="text-lg font-semibold text-violet-200 mb-3">Model Agreement</h2>
+      <div className="overflow-auto rounded-lg border border-slate-700">
         <table className="w-full text-[11px]">
-          <thead className="bg-stone-900">
-            <tr className="text-left text-stone-400 border-b border-stone-700">
+          <thead className="bg-slate-900">
+            <tr className="text-left text-slate-400 border-b border-slate-700">
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2 text-right">Amount</th>
               <th className="px-3 py-2 text-right">RF</th>
@@ -483,9 +483,9 @@ function ModelAgreement({ items }: { items: any[] }) {
           </thead>
           <tbody>
             {items.map((it, i) => (
-              <tr key={i} className="border-t border-stone-800/50 hover:bg-stone-800/30">
-                <td className="px-3 py-2 text-stone-500">{it.type}</td>
-                <td className="px-3 py-2 text-right tabular-nums text-stone-700">${it.amount.toLocaleString()}</td>
+              <tr key={i} className="border-t border-slate-800/50 hover:bg-slate-800/30">
+                <td className="px-3 py-2 text-slate-300">{it.type}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-slate-100">${it.amount.toLocaleString()}</td>
                 <td className="px-3 py-2 text-right tabular-nums"><span className={it.rf > 50 ? "text-red-400" : "text-emerald-400"}>{it.rf.toFixed(1)}%</span></td>
                 <td className="px-3 py-2 text-right tabular-nums"><span className={it.xgb > 50 ? "text-red-400" : "text-emerald-400"}>{it.xgb.toFixed(1)}%</span></td>
                 <td className="px-3 py-2 text-right tabular-nums"><span className={it.lgbm > 50 ? "text-red-400" : "text-emerald-400"}>{it.lgbm.toFixed(1)}%</span></td>
@@ -504,19 +504,19 @@ function FeatureImportance({ importance }: { importance: Record<string, number> 
     return Object.entries(importance).map(([feature, imp]) => ({
       feature: FEATURE_ALIASES[feature] || feature,
       importance: Number((imp * 100).toFixed(1)),
-      fill: imp > 0.25 ? "#f59e0b" : imp > 0.1 ? "#a78bfa" : "#78716c",
+      fill: imp > 0.25 ? "#8b5cf6" : imp > 0.1 ? "#06b6d4" : "#64748b",
     })).sort((a, b) => b.importance - a.importance);
   }, [importance]);
   return (
-    <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-      <h2 className="text-lg font-semibold text-amber-100 mb-3">Feature Importance (RandomForest)</h2>
-      <div className="h-[200px] w-full rounded-lg border border-stone-700 bg-stone-950/60 p-3">
+    <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+      <h2 className="text-lg font-semibold text-violet-200 mb-3">Feature Importance (RandomForest)</h2>
+      <div className="h-[200px] w-full rounded-lg border border-slate-700 bg-slate-950/60 p-3">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
-            <CartesianGrid stroke="#292524" horizontal={false} />
-            <XAxis type="number" domain={[0, 50]} tick={{ fill: "#78716c", fontSize: 10 }} label={{ value: "Importance %", position: "bottom", fill: "#78716c", fontSize: 10, offset: -5 }} />
+            <CartesianGrid stroke="#1e293b" horizontal={false} />
+            <XAxis type="number" domain={[0, 50]} tick={{ fill: "#64748b", fontSize: 10 }} label={{ value: "Importance %", position: "bottom", fill: "#64748b", fontSize: 10, offset: -5 }} />
             <YAxis dataKey="feature" type="category" width={110} tick={{ fill: "#cbd5e1", fontSize: 10 }} />
-            <Tooltip contentStyle={{ backgroundColor: "#1c1917", border: "1px solid #44403c", color: "#e2e8f0", fontSize: 11 }} formatter={(v: number) => [`${v.toFixed(1)}%`, "Importance"]} />
+            <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", color: "#e2e8f0", fontSize: 11 }} formatter={(v: number) => [`${v.toFixed(1)}%`, "Importance"]} />
             <Bar dataKey="importance" radius={[0, 4, 4, 0]}>{data.map((e, i) => <Cell key={i} fill={e.fill} />)}</Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -527,15 +527,15 @@ function FeatureImportance({ importance }: { importance: Record<string, number> 
 
 function AlertFeed({ alerts }: { alerts: AlertEntry[] }) {
   return (
-    <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
+    <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-amber-100">Alert Feed</h2>
-        <Badge variant="outline" className={`text-[10px] ${alerts.length > 0 ? "border-red-700/50 text-red-400" : "border-stone-700 text-stone-500"}`}>
+        <h2 className="text-lg font-semibold text-violet-200">Alert Feed</h2>
+        <Badge variant="outline" className={`text-[10px] ${alerts.length > 0 ? "border-red-700/50 text-red-400" : "border-slate-700 text-slate-500"}`}>
           {alerts.length} alerts
         </Badge>
       </div>
       {alerts.length === 0 ? (
-        <p className="text-xs text-stone-400">No alerts yet. High-risk events will appear here.</p>
+        <p className="text-xs text-slate-400">No alerts yet. High-risk events will appear here.</p>
       ) : (
         <div className="max-h-[250px] overflow-auto space-y-2">
           {alerts.map((a, i) => {
@@ -544,11 +544,11 @@ function AlertFeed({ alerts }: { alerts: AlertEntry[] }) {
               <div key={i} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs ${isVelocity ? "border-red-500/30 bg-red-950/20" : "border-orange-500/30 bg-orange-950/20"}`}>
                 <span className={`h-2 w-2 rounded-full shrink-0 ${isVelocity ? "bg-red-500 animate-pulse" : "bg-orange-500"}`} />
                 <div className="flex-1 min-w-0">
-                  <span className="font-semibold text-stone-700">{a.alert_type}</span>
-                  <span className="text-stone-500 mx-1">&middot;</span>
-                  <span className="text-stone-400">{a.type} ${a.amount.toLocaleString()}</span>
+                  <span className="font-semibold text-slate-100">{a.alert_type}</span>
+                  <span className="text-slate-500 mx-1">&middot;</span>
+                  <span className="text-slate-400">{a.type} ${a.amount.toLocaleString()}</span>
                 </div>
-                <span className="text-stone-500 shrink-0">{new Date(a.timestamp).toLocaleTimeString()}</span>
+                <span className="text-slate-500 shrink-0">{new Date(a.timestamp).toLocaleTimeString()}</span>
               </div>
             );
           })}
@@ -769,17 +769,17 @@ function App() {
 
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40 px-4 py-8 text-stone-800 sm:px-6 lg:px-8 print:hidden">
+      <main className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_left,_rgba(139,92,246,0.12),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(6,182,212,0.10),_transparent_50%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8 print:hidden">
       <div className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="flex items-center justify-between border-b border-emerald-200/60 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-emerald-800">Sentinel-XAI</h1>
-            <p className="mt-1 text-sm text-stone-500">Max-Vote Ensemble (RF + XGBoost + LightGBM) with SQLite persistence &amp; XAI tracing</p>
+            <h1 className="text-3xl font-bold tracking-tight text-violet-200">Sentinel-XAI</h1>
+            <p className="mt-1 text-sm text-slate-400">Max-Vote Ensemble (RF + XGBoost + LightGBM) with SQLite persistence &amp; XAI tracing</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-xs text-stone-400">{health ? `${health.model_count} Models Loaded` : "Loading..."}</span>
-            <span className="text-[10px] text-stone-600 border-l border-stone-700 pl-3 font-mono">{liveTime}</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs text-slate-400">{health ? `${health.model_count} Models Loaded` : "Loading..."}</span>
+            <span className="text-[10px] text-slate-600 border-l border-slate-700 pl-3 font-mono">{liveTime}</span>
           </div>
         </div>
 
@@ -787,17 +787,17 @@ function App() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="space-y-6">
-            <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-              <h2 className="text-xl font-semibold text-amber-100">Transaction Analysis</h2>
+            <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+              <h2 className="text-xl font-semibold text-violet-200">Transaction Analysis</h2>
               <form className="mt-4 space-y-4" onSubmit={onSubmit}>
                 <div className="space-y-2">
-                  <Label className="text-stone-700">Session ID / Device Hash</Label>
-                  <Input type="text" required value={form.session_id} onChange={handleInput("session_id")} className="border-stone-700 bg-stone-950 text-stone-700" placeholder="SESSION-99X" />
+                  <Label className="text-slate-200">Session ID / Device Hash</Label>
+                  <Input type="text" required value={form.session_id} onChange={handleInput("session_id")} className="border-slate-700 bg-slate-950 text-slate-100" placeholder="SESSION-99X" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-stone-700">Transaction Type</Label>
+                  <Label className="text-slate-200">Transaction Type</Label>
                   <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}>
-                    <SelectTrigger className="border-stone-700 bg-stone-950 text-stone-700"><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectTrigger className="border-slate-700 bg-slate-950 text-slate-100"><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
                       {TRANSACTION_TYPES.map((t) => (
                         <SelectItem key={t.backendValue} value={t.backendValue}>{t.displayLabel}</SelectItem>
@@ -805,61 +805,61 @@ function App() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2"><Label className="text-stone-700">Amount</Label><Input type="number" min="0" step="0.01" required value={form.amount} onChange={handleInput("amount")} className="border-stone-700 bg-stone-950 text-stone-700" placeholder="80000" /></div>
-                <div className="space-y-2"><Label className="text-stone-700">Sender Starting Balance</Label><Input type="number" min="0" step="0.01" required value={form.oldbalanceOrg} onChange={handleInput("oldbalanceOrg")} className="border-stone-700 bg-stone-950 text-stone-700" placeholder="80000" /></div>
-                <div className="space-y-2"><Label className="text-stone-700">Receiver Starting Balance</Label><Input type="number" min="0" step="0.01" required value={form.oldbalanceDest} onChange={handleInput("oldbalanceDest")} className="border-stone-700 bg-stone-950 text-stone-700" placeholder="0" /></div>
+                <div className="space-y-2"><Label className="text-slate-200">Amount</Label><Input type="number" min="0" step="0.01" required value={form.amount} onChange={handleInput("amount")} className="border-slate-700 bg-slate-950 text-slate-100" placeholder="80000" /></div>
+                <div className="space-y-2"><Label className="text-slate-200">Sender Starting Balance</Label><Input type="number" min="0" step="0.01" required value={form.oldbalanceOrg} onChange={handleInput("oldbalanceOrg")} className="border-slate-700 bg-slate-950 text-slate-100" placeholder="80000" /></div>
+                <div className="space-y-2"><Label className="text-slate-200">Receiver Starting Balance</Label><Input type="number" min="0" step="0.01" required value={form.oldbalanceDest} onChange={handleInput("oldbalanceDest")} className="border-slate-700 bg-slate-950 text-slate-100" placeholder="0" /></div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Button type="submit" disabled={loading || stressLoading} className="bg-amber-600 text-white hover:bg-amber-500 font-semibold">{loading ? "Analyzing..." : "Analyze Transaction"}</Button>
+                  <Button type="submit" disabled={loading || stressLoading} className="bg-violet-600 text-white hover:bg-violet-500 font-semibold">{loading ? "Analyzing..." : "Analyze Transaction"}</Button>
                   <Button type="button" onClick={onGenerateHighRisk} disabled={loading || stressLoading} variant="outline" className="border-rose-700/60 text-rose-300 hover:bg-rose-950/50 font-semibold">Generate High-Risk Sample</Button>
                 </div>
-                <Button type="button" onClick={onStressTest} disabled={loading || stressLoading} className="w-full bg-stone-700 text-white hover:bg-stone-600 font-semibold">{stressLoading ? "Running 50 Concurrent Requests..." : "Concurrency Stress Test (50 Requests)"}</Button>
+                <Button type="button" onClick={onStressTest} disabled={loading || stressLoading} className="w-full bg-slate-700 text-white hover:bg-slate-600 font-semibold">{stressLoading ? "Running 50 Concurrent Requests..." : "Concurrency Stress Test (50 Requests)"}</Button>
               </form>
-              {stressSummary && <p className="mt-4 rounded-md border border-stone-700 bg-stone-950/80 px-3 py-2 text-xs text-stone-500">{stressSummary}</p>}
+              {stressSummary && <p className="mt-4 rounded-md border border-slate-700 bg-slate-950/80 px-3 py-2 text-xs text-slate-400">{stressSummary}</p>}
               {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
             </Card>
 
-            <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-              <h2 className="text-lg font-semibold text-amber-100">Threshold Configurator</h2>
+            <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+              <h2 className="text-lg font-semibold text-violet-200">Threshold Configurator</h2>
               <div className="mt-4 space-y-4">
                 <div>
-                  <div className="flex justify-between text-xs text-stone-500"><span>ALLOW_THRESHOLD</span><span className="font-mono text-emerald-400">{config.allow_threshold.toFixed(2)}</span></div>
-                  <input type="range" min="0" max="1" step="0.05" value={config.allow_threshold} onChange={(e) => setConfig((p) => ({ ...p, allow_threshold: Number(e.target.value) }))} className="mt-1 w-full accent-amber-500" />
+                  <div className="flex justify-between text-xs text-slate-300"><span>ALLOW_THRESHOLD</span><span className="font-mono text-emerald-400">{config.allow_threshold.toFixed(2)}</span></div>
+                  <input type="range" min="0" max="1" step="0.05" value={config.allow_threshold} onChange={(e) => setConfig((p) => ({ ...p, allow_threshold: Number(e.target.value) }))} className="mt-1 w-full accent-violet-500" />
                 </div>
                 <div>
-                  <div className="flex justify-between text-xs text-stone-500"><span>BLOCK_THRESHOLD</span><span className="font-mono text-red-400">{config.block_threshold.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-xs text-slate-300"><span>BLOCK_THRESHOLD</span><span className="font-mono text-red-400">{config.block_threshold.toFixed(2)}</span></div>
                   <input type="range" min="0" max="1" step="0.05" value={config.block_threshold} onChange={(e) => setConfig((p) => ({ ...p, block_threshold: Number(e.target.value) }))} className="mt-1 w-full accent-red-500" />
                 </div>
-                <Button onClick={onConfigUpdate} className="w-full bg-amber-600 text-stone-950 hover:bg-amber-500 font-bold">Apply Thresholds</Button>
-                {configMsg && <p className="text-xs text-center text-amber-400">{configMsg}</p>}
+                <Button onClick={onConfigUpdate} className="w-full bg-violet-600 text-white hover:bg-violet-500 font-bold">Apply Thresholds</Button>
+                {configMsg && <p className="text-xs text-center text-violet-400">{configMsg}</p>}
               </div>
             </Card>
 
-            <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-              <h2 className="text-lg font-semibold text-amber-100">Batch CSV Upload</h2>
-              <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={onFileDrop} onClick={() => fileRef.current?.click()} className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${dragOver ? "border-amber-400 bg-amber-950/20" : "border-stone-700 bg-stone-950/50 hover:border-stone-500"}`}>
-                <svg className="mb-2 h-8 w-8 text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16V4m0 0L8 8m4-4l4 4" /></svg>
-                <span className="text-xs text-stone-400">{batchLoading ? "Processing..." : "Click or drop CSV here"}</span>
+            <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+              <h2 className="text-lg font-semibold text-violet-200">Batch CSV Upload</h2>
+              <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={onFileDrop} onClick={() => fileRef.current?.click()} className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${dragOver ? "border-violet-400 bg-violet-950/20" : "border-slate-700 bg-slate-950/50 hover:border-slate-500"}`}>
+                <svg className="mb-2 h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16V4m0 0L8 8m4-4l4 4" /></svg>
+                <span className="text-xs text-slate-400">{batchLoading ? "Processing..." : "Click or drop CSV here"}</span>
               </div>
               <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={onFileSelect} />
-              {batchResult && (<><div className="mt-3 text-xs text-stone-500">Processed <span className="font-semibold text-stone-700">{batchResult.total}</span> transactions &mdash; Avg risk: <span className="font-semibold text-stone-700">{batchResult.avg_confidence.toFixed(2)}%</span></div><RiskDistributionBar summary={batchResult.summary} /></>)}
+              {batchResult && (<><div className="mt-3 text-xs text-slate-400">Processed <span className="font-semibold text-slate-100">{batchResult.total}</span> transactions &mdash; Avg risk: <span className="font-semibold text-slate-100">{batchResult.avg_confidence.toFixed(2)}%</span></div><RiskDistributionBar summary={batchResult.summary} /></>)}
             </Card>
           </div>
 
           <div className="space-y-6">
-            <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-              <h2 className="text-xl font-semibold text-amber-100">XAI Visualizer</h2>
+            <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+              <h2 className="text-xl font-semibold text-violet-200">XAI Visualizer</h2>
               {!result ? (
-                <p className="mt-3 text-sm text-stone-500">Run an analysis to visualize feature-level anomaly contributions.</p>
+                <p className="mt-3 text-sm text-slate-400">Run an analysis to visualize feature-level anomaly contributions.</p>
               ) : (
                 <>
                   <div className="mt-4 flex flex-wrap items-center gap-4">
                     <Badge className={`px-4 py-1.5 text-base font-bold tracking-wide ${statusBadgeClass}`}>{result.reason === "VELOCITY_EXCEEDED" ? "BLOCKED" : result.status}</Badge>
-                    <div className="text-sm text-stone-500">
+                    <div className="text-sm text-slate-300">
                       {result.reason === "VELOCITY_EXCEEDED" ? <span className="text-red-400 font-semibold">Rate Limit Exceeded</span> : <>Confidence: <span className="font-semibold text-white">{result.confidence_score.toFixed(2)}%</span></>}
                     </div>
-                    {result.txn_uuid && <span className="text-[10px] text-stone-500 font-mono flex items-center gap-1">
+                    {result.txn_uuid && <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
                       UUID: {result.txn_uuid}
-                      <button onClick={() => { navigator.clipboard.writeText(result.txn_uuid!); setCopiedUuid(result.txn_uuid!); setTimeout(() => setCopiedUuid(""), 1500); }} className="text-stone-600 hover:text-amber-400 transition-colors" title="Copy UUID">
+                      <button onClick={() => { navigator.clipboard.writeText(result.txn_uuid!); setCopiedUuid(result.txn_uuid!); setTimeout(() => setCopiedUuid(""), 1500); }} className="text-slate-600 hover:text-violet-400 transition-colors" title="Copy UUID">
                         {copiedUuid === result.txn_uuid ? (
                           <svg className="h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                         ) : (
@@ -881,14 +881,14 @@ function App() {
                         : result.reason === "VELOCITY_EXCEEDED"
                           ? "Session blocked: Rate limit exceeded."
                           : reasons[result.status] || "Transaction processed.";
-                    return <p className="mt-2 text-sm text-stone-500">{display}</p>;
+                    return <p className="mt-2 text-sm text-slate-300">{display}</p>;
                   })()}
 
                   {result.model_votes && (
                     <div className="mt-4 flex gap-2 flex-wrap">
                       {(["rf", "xgb", "lgbm"] as const).map((m) => (
-                        <span key={m} className="rounded-md border border-stone-700 bg-stone-950/60 px-2 py-1 text-[10px]">
-                          <span className="text-stone-500 uppercase">{m}:</span>{" "}
+                        <span key={m} className="rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-[10px]">
+                          <span className="text-slate-500 uppercase">{m}:</span>{" "}
                           <span className={result.model_votes![m] > 50 ? "text-red-400 font-semibold" : "text-emerald-400 font-semibold"}>{result.model_votes![m].toFixed(1)}%</span>
                         </span>
                       ))}
@@ -903,33 +903,33 @@ function App() {
                   ) : result.status === "DECLINED" ? (
                     <div className="mt-5 rounded-lg border border-orange-500/30 bg-orange-950/20 p-4">
                       <div className="text-xs uppercase tracking-wider text-orange-400">Blocked &mdash; {result.reason}</div>
-                      <p className="mt-2 text-sm text-stone-500">Transaction declined: amount exceeds sender balance.</p>
+                      <p className="mt-2 text-sm text-slate-300">Transaction declined: amount exceeds sender balance.</p>
                     </div>
                   ) : (
                     <>
-                      <div className="mt-5 rounded-lg border border-stone-700 bg-stone-950/70 p-4">
-                        <div className="text-xs uppercase tracking-wider text-stone-400">Anomaly Distance</div>
-                        <div className="mt-1 text-3xl font-bold text-amber-300 tabular-nums">{result.euclidean_distance_to_fraud.toFixed(4)}</div>
-                        <div className="mt-1 text-xs text-stone-400">Euclidean distance to fraud centroid.</div>
+                      <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950/70 p-4">
+                        <div className="text-xs uppercase tracking-wider text-slate-400">Anomaly Distance</div>
+                        <div className="mt-1 text-3xl font-bold text-violet-300 tabular-nums">{result.euclidean_distance_to_fraud.toFixed(4)}</div>
+                        <div className="mt-1 text-xs text-slate-400">Euclidean distance to fraud centroid.</div>
                       </div>
-                      <div className="mt-5 h-[320px] w-full rounded-lg border border-stone-700 bg-stone-950/60 p-3">
+                      <div className="mt-5 h-[320px] w-full rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                         <ResponsiveContainer width="100%" height="100%">
                           <RadarChart data={radarData} outerRadius="75%">
-                            <PolarGrid stroke="#44403c" />
+                            <PolarGrid stroke="#334155" />
                             <PolarAngleAxis dataKey="feature" tick={{ fill: "#cbd5e1", fontSize: 11 }} />
-                            <Tooltip formatter={(value: number) => [`${value.toFixed(2)}%`, "Suspicion"]} contentStyle={{ backgroundColor: "#1c1917", border: "1px solid #44403c", color: "#e2e8f0" }} />
-                            <Radar name="Suspicion" dataKey="suspicion" stroke="#f59e0b" fill="#92400e" fillOpacity={0.45} />
+                            <Tooltip formatter={(value: number) => [`${value.toFixed(2)}%`, "Suspicion"]} contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", color: "#e2e8f0" }} />
+                            <Radar name="Suspicion" dataKey="suspicion" stroke="#8b5cf6" fill="#6d28d9" fillOpacity={0.35} />
                           </RadarChart>
                         </ResponsiveContainer>
                       </div>
                       <DivergenceChart contributions={result.feature_contributions} />
-                      <div className="mt-4 text-sm text-stone-500">Top suspicious: <span className="font-semibold text-amber-200">{(FEATURE_ALIASES[result.top_suspicious_feature ?? ""] || result.top_suspicious_feature) ?? "n/a"}</span></div>
-                      <div className="mt-2 text-sm text-stone-500">Ending Balance: <span className="font-semibold text-white tabular-nums">${_calculatedEndBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+                      <div className="mt-4 text-sm text-slate-300">Top suspicious: <span className="font-semibold text-violet-200">{(FEATURE_ALIASES[result.top_suspicious_feature ?? ""] || result.top_suspicious_feature) ?? "n/a"}</span></div>
+                      <div className="mt-2 text-sm text-slate-300">Ending Balance: <span className="font-semibold text-white tabular-nums">${_calculatedEndBal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
                     </>
                   )}
                   <AuditReceipt result={result} form={form} onExport={onExport} />
                   <div className="mt-4 flex justify-end">
-                    <Button onClick={() => window.print()} variant="outline" size="sm" className="border-stone-600 text-stone-500 bg-stone-950 hover:bg-stone-800 text-xs">
+                    <Button onClick={() => window.print()} variant="outline" size="sm" className="border-slate-600 text-slate-400 bg-slate-950 hover:bg-slate-800 text-xs">
                       Print Official Receipt
                     </Button>
                   </div>
@@ -937,10 +937,10 @@ function App() {
               )}
             </Card>
 
-            <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
-              <h2 className="text-lg font-semibold text-amber-100">Session Timeline</h2>
+            <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
+              <h2 className="text-lg font-semibold text-violet-200">Session Timeline</h2>
               <SessionTimeline points={timeline} />
-              {timeline.length < 2 && <p className="mt-2 text-xs text-stone-500">Send 2+ requests to see timeline.</p>}
+              {timeline.length < 2 && <p className="mt-2 text-xs text-slate-500">Send 2+ requests to see timeline.</p>}
             </Card>
           </div>
         </div>
@@ -953,13 +953,13 @@ function App() {
         <AlertFeed alerts={alerts} />
 
         {ledger.length > 0 && (
-          <Card className="border-stone-800 bg-stone-900/80 p-6 backdrop-blur border-t-[1px] border-t-amber-500/10">
+          <Card className="border-slate-800 bg-slate-900/80 p-6 backdrop-blur border-t-[1px] border-t-violet-500/20">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-lg font-semibold text-amber-100">Historical Audit Ledger</h2>
-                <p className="mt-0.5 text-[10px] text-stone-500">SQLite persistent storage &mdash; {ledger.length} records &middot; auto-refresh every 15s</p>
+                <h2 className="text-lg font-semibold text-violet-200">Historical Audit Ledger</h2>
+                <p className="mt-0.5 text-[10px] text-slate-500">SQLite persistent storage &mdash; {ledger.length} records &middot; auto-refresh every 15s</p>
               </div>
-              <Button onClick={fetchAll} variant="outline" size="sm" className="h-6 text-[10px] border-stone-700 text-stone-500 bg-stone-950 hover:bg-stone-800" disabled={ledgerLoading}>
+              <Button onClick={fetchAll} variant="outline" size="sm" className="h-6 text-[10px] border-slate-700 text-slate-400 bg-slate-950 hover:bg-slate-800" disabled={ledgerLoading}>
   {ledgerLoading ? (
     <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -969,10 +969,10 @@ function App() {
   {ledgerLoading ? "Refreshing..." : "Refresh"}
 </Button>
             </div>
-            <div className="max-h-[350px] overflow-auto rounded-lg border border-stone-700">
+            <div className="max-h-[350px] overflow-auto rounded-lg border border-slate-700">
               <table className="w-full text-[11px]">
-                <thead className="sticky top-0 bg-stone-900 z-10">
-                  <tr className="text-left text-stone-400 border-b border-stone-700">
+                <thead className="sticky top-0 bg-slate-900 z-10">
+                  <tr className="text-left text-slate-400 border-b border-slate-700">
                     <th className="px-3 py-2">Decision</th>
                     <th className="px-3 py-2">Type</th>
                     <th className="px-3 py-2 text-right">Amount</th>
@@ -984,14 +984,14 @@ function App() {
                 </thead>
                 <tbody>
                   {ledger.map((e) => (
-                    <tr key={e.id} className="border-t border-stone-800/50 hover:bg-stone-800/30">
-                      <td className="px-3 py-2"><span className="flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${statusDot(e.decision)}`} /><span className="font-medium text-stone-700">{e.decision}</span></span></td>
-                      <td className="px-3 py-2 text-stone-500">{e.type}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-stone-700">${e.amount.toLocaleString()}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-stone-700">{e.risk_score.toFixed(1)}%</td>
-                      <td className="px-3 py-2 text-stone-400">{e.heuristic_triggered || "-"}</td>
-                      <td className="px-3 py-2 text-stone-400 font-mono">{e.session_id}</td>
-                      <td className="px-3 py-2 text-stone-500 text-[10px]">{new Date(e.timestamp).toLocaleString()}</td>
+                    <tr key={e.id} className="border-t border-slate-800/50 hover:bg-slate-800/30">
+                      <td className="px-3 py-2"><span className="flex items-center gap-1.5"><span className={`h-1.5 w-1.5 rounded-full ${statusDot(e.decision)}`} /><span className="font-medium text-slate-100">{e.decision}</span></span></td>
+                      <td className="px-3 py-2 text-slate-400">{e.type}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-100">${e.amount.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-100">{e.risk_score.toFixed(1)}%</td>
+                      <td className="px-3 py-2 text-slate-400">{e.heuristic_triggered || "-"}</td>
+                      <td className="px-3 py-2 text-slate-400 font-mono">{e.session_id}</td>
+                      <td className="px-3 py-2 text-slate-500 text-[10px]">{new Date(e.timestamp).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
